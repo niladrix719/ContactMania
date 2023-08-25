@@ -7,7 +7,9 @@ function navbar() {
       <div className="w-1/3">
         <h1 className="text-2xl font-bold justify-start flex">Contact Mania</h1>
       </div>
-      <div className="w-1/3 flex gap-4 justify-end">
+      <div className="w-1/3 flex gap-4 items-center justify-end">
+        <a href='/'>Home</a>
+        <a href='/charts_and_maps'>Charts and Maps</a>
         <Button>Login</Button>
         <ModeToggle />
       </div>

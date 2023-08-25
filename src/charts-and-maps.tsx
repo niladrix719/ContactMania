@@ -1,42 +1,79 @@
+import React from "react";
 import { Line } from "react-chartjs-2";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useQuery } from "react-query";
 import axios from "axios";
 import Navbar from "./components/navbar";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import {
+  Chart as ChartJS,
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Legend,
+  Tooltip,
+} from "chart.js";
+
+ChartJS.register(
+  LineElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Legend,
+  Tooltip
+);
 
 function ChartsAndMaps() {
-  const { data: worldData } = useQuery("worldData", () =>
+  const { data: worldData, error: worldError } = useQuery("worldData", () =>
     axios
       .get("https://disease.sh/v3/covid-19/all")
       .then((response) => response.data)
   );
 
-  const { data: countryData } = useQuery("countryData", () =>
+  const { data: countryData, error: countryError } = useQuery("countryData", () =>
     axios
       .get("https://disease.sh/v3/covid-19/countries")
       .then((response) => response.data)
   );
 
-  // const formatWorldwideDataForChart = (data) => {
-  //   const labels = Object.keys(data.cases);
-  //   const cases = Object.values(data.cases);
+  if (worldError || countryError) {
+    return <div>Error fetching data</div>;
+  }
 
-  //   return {
-  //     labels,
-  //     datasets: [
-  //       {
-  //         label: "Worldwide Cases",
-  //         data: cases,
-  //         borderColor: "aqua",
-  //         backgroundColor: "rgba(0, 123, 255, 0.2)",
-  //         fill: true,
-  //       },
-  //     ],
-  //   };
-  // };
+  const formatWorldwideDataForChart = (data: any) => {
+    return {
+      labels: ["Worldwide"],
+      datasets: [
+        {
+          label: "Worldwide Cases",
+          data: [data.cases],
+          borderColor: "aqua",
+          backgroundColor: "rgba(0, 123, 255, 0.2)",
+          fill: true,
+        },
+      ],
+    };
+  };
 
-  const markers = countryData?.map((country) => ({
+  const formatCountryDataForChart = (data: any) => {
+    const labels = data.map((country: any) => country.country);
+    const cases = data.map((country: any) => country.cases);
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: "Cases by Country",
+          data: cases,
+          borderColor: "aqua",
+          backgroundColor: "rgba(0, 123, 255, 0.2)",
+          fill: true,
+        },
+      ],
+    };
+  };
+
+  const markers = countryData?.map((country: any) => ({
     lat: country.countryInfo.lat,
     lng: country.countryInfo.long,
     countryName: country.country,
@@ -47,32 +84,6 @@ function ChartsAndMaps() {
   return (
     <div>
       <Navbar />
-      {/* <div>
-        <Line
-          data={formatWorldwideDataForChart(worldData)}
-          height={400}
-          width={600}
-          options={{
-            plugins: {
-              legend: {
-                display: true,
-                position: "top",
-                labels: {
-                  font: {
-                    size: 18,
-                  },
-                },
-              },
-            },
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true,
-              },
-            },
-          }}
-        />
-      </div> */}
       <div>
         <MapContainer
           center={[20, 0]}
@@ -84,7 +95,7 @@ function ChartsAndMaps() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {markers?.map((marker, index) => (
+          {markers?.map((marker: any, index: any) => (
             <Marker key={index} position={[marker.lat, marker.lng]}>
               <Popup>
                 <h1>{marker.countryName}</h1>
@@ -94,6 +105,37 @@ function ChartsAndMaps() {
             </Marker>
           ))}
         </MapContainer>
+      </div>
+      <div>
+        {countryData ? (
+          <Line
+            data={formatCountryDataForChart(countryData)}
+            height={400}
+            width={600}
+            options={{
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "top",
+                  labels: {
+                    font: {
+                      size: 18,
+                    },
+                  },
+                },
+              },
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  type: "linear",
+                  beginAtZero: true,
+                },
+              },
+            }}
+          />
+        ) : (
+          <div>Loading country chart...</div>
+        )}
       </div>
     </div>
   );

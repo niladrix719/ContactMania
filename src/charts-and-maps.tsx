@@ -1,4 +1,3 @@
-import React from "react";
 import { Line } from "react-chartjs-2";
 import "leaflet/dist/leaflet.css";
 import { useQuery } from "react-query";
@@ -25,36 +24,15 @@ ChartJS.register(
 );
 
 function ChartsAndMaps() {
-  const { data: worldData, error: worldError } = useQuery("worldData", () =>
-    axios
-      .get("https://disease.sh/v3/covid-19/all")
-      .then((response) => response.data)
-  );
-
   const { data: countryData, error: countryError } = useQuery("countryData", () =>
     axios
       .get("https://disease.sh/v3/covid-19/countries")
       .then((response) => response.data)
   );
 
-  if (worldError || countryError) {
+  if (countryError) {
     return <div>Error fetching data</div>;
   }
-
-  const formatWorldwideDataForChart = (data: any) => {
-    return {
-      labels: ["Worldwide"],
-      datasets: [
-        {
-          label: "Worldwide Cases",
-          data: [data.cases],
-          borderColor: "aqua",
-          backgroundColor: "rgba(0, 123, 255, 0.2)",
-          fill: true,
-        },
-      ],
-    };
-  };
 
   const formatCountryDataForChart = (data: any) => {
     const labels = data.map((country: any) => country.country);
@@ -86,14 +64,14 @@ function ChartsAndMaps() {
       <Navbar />
       <div>
         <MapContainer
-          center={[20, 0]}
+          center={{ lat: 20, lng: 0 }}
           zoom={2}
           style={{ height: "60vh", width: "100%" }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+        attribution='&copy; <a href="http://osm.org/copyright%22%3EOpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
 
           {markers?.map((marker: any, index: any) => (
             <Marker key={index} position={[marker.lat, marker.lng]}>
